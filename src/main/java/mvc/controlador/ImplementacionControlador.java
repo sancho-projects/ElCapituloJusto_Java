@@ -17,4 +17,15 @@ public class ImplementacionControlador implements Controlador{
         this.modelo = modelo;
     }
 
+
+    @Override
+    public void goPressed() {
+        String file = vista.getPanel();
+        if (vista.getStatus().equals("Siguiente")){
+            modelo.nextPanel();
+        } else {
+            modelo.showAnswer(vista.getChapter());
+        }
+
+    }
 }

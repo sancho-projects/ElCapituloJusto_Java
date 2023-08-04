@@ -14,7 +14,7 @@ import java.io.IOException;
 public class Main extends Application {
 
     @Override
-    public void start(Stage stage) throws IOException {
+    public void start(Stage stage) {
         ImplementacionControlador controlador = new ImplementacionControlador();
         ImplementacionModelo modelo = new ImplementacionModelo();
         ImplementacionVista vista = new ImplementacionVista(stage);
