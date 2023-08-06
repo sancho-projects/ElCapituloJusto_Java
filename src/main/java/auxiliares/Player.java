@@ -7,6 +7,10 @@ public class Player {
     public Player(String name) {
         this.name = name;
     }
+    public Player(String name, int score) {
+        this.name = name;
+        this.score = score;
+    }
 
     public int getScore() {
         return score;

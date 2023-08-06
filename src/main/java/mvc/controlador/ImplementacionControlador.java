@@ -17,7 +17,6 @@ public class ImplementacionControlador implements Controlador{
         this.modelo = modelo;
     }
 
-
     @Override
     public void goPressed() {
         String file = vista.getPanel();

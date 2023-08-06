@@ -1,8 +1,8 @@
 package mvc.vista;
 
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Spinner;
 import javafx.scene.image.Image;
@@ -27,15 +27,19 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
 
     private ImageView iv;
     private Button button;
-    Spinner<Integer> chapter;
-    Label score;
-    Label feedback = new Label("Juego sacado de RadioPirata y programado por Sancho.");
+    private Spinner<Integer> chapter;
+    private Label score;
+    private Label feedback = new Label("Juego sacado de RadioPirata y programado por Sancho.");
+
+
     private Font TITLE_FONT = new Font("Montserrat", 30);
     private Font TEXT_FONT = new Font("Montserrat", 20);
     public ImplementacionVista(Stage stage) {
         this.stage = stage;
     }
 
+
+    // SETTERS
     public void setModelo(ImplementacionModelo modelo) {
         this.modelo = modelo;
     }
@@ -44,6 +48,44 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         this.controlador = controlador;
     }
 
+    @Override
+    public void setFeedback(String string) {
+        feedback.setText(string);
+    }
+
+    @Override
+    public void setScore(int newscore) {
+        score.setText(Integer.toString(newscore));
+    }
+
+    @Override
+    public void setStatus(String status) {
+        button.setText(status);
+    }
+
+    @Override
+    public void setNewPanel(String fileName) {
+        iv.setImage(new Image(fileName));
+    }
+
+
+    // GETTERS
+    public String getPanel(){
+        return iv.getImage().getUrl();
+    }
+
+    @Override
+    public String getStatus() {
+        return button.getText();
+    }
+
+    @Override
+    public int getChapter() {
+        return chapter.getValue();
+    }
+
+
+    // GUI
     public void creaGUI() {
         Parent titleBox = titleGUI();
         Parent panelBox = panelGUI();
@@ -64,7 +106,6 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         stage.show();
     }
 
-
     private Parent titleGUI() {
         Label saludo = new Label("El capítulo justo!");
         //saludo.setMnemonicParsing(true);
@@ -76,7 +117,6 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         return title;
     }
 
-
     private Parent panelGUI() {
         Image pannel = new Image("rules.jpg");
         iv = new ImageView();
@@ -85,20 +125,6 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         VBox panel = new VBox(iv, feedback);
         panel.setAlignment(Pos.CENTER);
         return panel;
-    }
-    @Override
-    public void setFeedback(String string) {
-        feedback.setText(string);
-    }
-
-    @Override
-    public void setScore(int newscore) {
-        score.setText(Integer.toString(newscore));
-    }
-
-    @Override
-    public void setStatus(String status) {
-        button.setText(status);
     }
 
     private Parent dataGUI() {
@@ -137,24 +163,17 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         return buttonBox;
     }
 
-    public String getPanel(){
-        return iv.getImage().getUrl();
-    }
 
+    // OTHERS
     @Override
-    public String getStatus() {
-        return button.getText();
-    }
+    public void endGame() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setHeaderText("Tu puntuación final es de " + modelo.getScore());
+        alert.setTitle("Puntuación final");
+        alert.setContentText(modelo.getScoreBoard());
+        alert.showAndWait();
 
-    @Override
-    public int getChapter() {
-        return chapter.getValue();
+        stage.close();
     }
-
-    @Override
-    public void newPanel(String fileName) {
-        iv.setImage(new Image(fileName));
-    }
-
 
 }

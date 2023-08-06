@@ -1,5 +1,6 @@
 package mvc.modelo;
 
+import auxiliares.HighScore;
 import auxiliares.Panel;
 import auxiliares.Player;
 import auxiliares.lectura.Table;
@@ -11,32 +12,43 @@ import java.util.*;
 
 public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
     private InformaVista vista;
-
     public ImplementacionModelo(){
+        turn = 0;
+        player = new Player(giveName());
         loadPanels();
     }
-    private Set<Panel> panels = new HashSet<>();
+
+    private String giveName() {
+        //provisional
+        System.out.print("Dime tu nombre: ");
+        Scanner sc = new Scanner(System.in);
+        String nombre = sc.next();
+        sc.close();
+        return nombre;
+    }
+
     private Iterator<Panel> it;
+    private Set<Panel> panels = new HashSet<>();
+    private Player player;
     private Panel currentPanel = null;
-    private Player player = new Player("Jugador");
+    private int turn;
 
     public void setVista(ImplementacionVista vista) {
         this.vista = vista;
     }
 
-
     private void loadPanels() {
         CSVUnlabeledFileReader csv = new CSVUnlabeledFileReader();
-        Table tabla = csv.readTableFromSource("src/main/resources/solution.csv");
+        Table table = csv.readTableFromSource("src/main/resources/solution.csv");
 
         List<Integer> randomNumbers = new ArrayList<>();
-        for (int i=0; i < tabla.getNumRows(); i++){
+        for (int i=0; i < table.getNumRows(); i++){
             randomNumbers.add(i);
         }
         Collections.shuffle(randomNumbers);
 
         for (int i: randomNumbers){
-            List<Integer> row = tabla.getRowAt(i).getData();
+            List<Integer> row = table.getRowAt(i).getData();
 
             String fileName = row.get(0) + ".png";
             int chapter = row.get(1);
@@ -59,23 +71,28 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
 
     @Override
     public void nextPanel() {
-        if (it==null) it = panels.iterator();
+        if (turn==10) {
+            vista.setFeedback("FIN DEL JUEGO.");
+            vista.endGame();
+        }
+        else {
+            if (it == null) it = panels.iterator();
 
-        currentPanel = null;
-        while (it.hasNext() && currentPanel == null){
-            Panel newPanel = it.next();
-            if (true){ //cumple los requisitos
-                currentPanel = newPanel;
+            currentPanel = null;
+            while (it.hasNext() && currentPanel == null) {
+                Panel newPanel = it.next();
+                if (true) { //cumple los requisitos
+                    currentPanel = newPanel;
+                }
+
             }
-
-        }
-        if (currentPanel == null) {
-            System.out.println("No hay más viñetas.");
-        }
-        else{
-            vista.newPanel(currentPanel.getImage());
-            vista.setFeedback("");
-            vista.setStatus("Comprobar");
+            if (currentPanel == null) {
+                System.out.println("No hay más viñetas.");
+            } else {
+                vista.setNewPanel(currentPanel.getImage());
+                vista.setFeedback("");
+                vista.setStatus("Comprobar");
+            }
         }
     }
 
@@ -100,9 +117,28 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
         }
         vista.setScore(player.getScore());
         vista.setStatus("Siguiente");
+        turn++;
     }
 
-    private int getAnswer(){
-        return currentPanel.getRightChapter();
+
+    @Override
+    public String getScoreBoard() {
+        HighScore.readFile();
+        if (player.getScore() < HighScore.getMaxHighScore()){
+            HighScore.update(player);
+        }
+
+        StringBuilder str = new StringBuilder();
+        str.append("PUNTUACIÓN\t\tNOMBRE\n");
+        for (Player player: HighScore.getPlayers()) {
+            str.append(player.getScore() + "\t\t\t\t" + player.getName() + "\n");
+        }
+        return str.toString();
     }
+
+    @Override
+    public int getScore() {
+        return player.getScore();
+    }
+
 }
