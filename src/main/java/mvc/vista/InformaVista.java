@@ -8,7 +8,7 @@ public interface InformaVista {
     void setScore(int index, int score);
     void setStatus(String status);
 
-    void endGame();
+    void finalScoreGUI();
 
     void setFeedback(int i, String s);
 }

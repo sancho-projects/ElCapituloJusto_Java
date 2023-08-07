@@ -14,7 +14,6 @@ public class ImplementacionControlador implements Controlador{
     public void setVista(ImplementacionVista vista) {
         this.vista = vista;
     }
-
     public void setModelo(ImplementacionModelo modelo) {
         this.modelo = modelo;
     }
@@ -33,7 +32,7 @@ public class ImplementacionControlador implements Controlador{
     public void sendNames(List<String> names) {
         for (int i=0; i<names.size(); i++) {
             String name = names.get(i);
-            if (name.equals("") || name == null) {
+            if (name.equals("")) {
                 names.set(i,"Jugador " + (i+1) );
             }
         }

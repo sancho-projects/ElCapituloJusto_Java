@@ -6,8 +6,6 @@ import javafx.stage.Stage;
 import mvc.modelo.ImplementacionModelo;
 import mvc.vista.ImplementacionVista;
 
-import java.io.IOException;
-
 /**
  * JavaFX App
  */
@@ -26,7 +24,7 @@ public class Main extends Application {
 
         vista.setModelo(modelo);
         vista.setControlador(controlador);
-        vista.creaGUI();
+        vista.creaMenuGUI();
     }
 
     public static void main(String[] args) {

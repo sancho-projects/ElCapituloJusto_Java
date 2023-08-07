@@ -23,10 +23,6 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
     private Panel currentPanel = null;
     private int turn;
 
-    public void setVista(ImplementacionVista vista) {
-        this.vista = vista;
-    }
-
     private void loadPanels() {
         CSVUnlabeledFileReader csv = new CSVUnlabeledFileReader();
         Table table = csv.readTableFromSource("src/main/resources/solution.csv");
@@ -63,7 +59,7 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
     public void nextPanel() {
         if (turn==10) {
             vista.setFeedbackGeneral("FIN DEL JUEGO.");
-            vista.endGame();
+            vista.finalScoreGUI();
         }
         else {
             if (it == null) it = panels.iterator();
@@ -118,6 +114,11 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
         turn++;
     }
 
+    // SETTERS
+    public void setVista(ImplementacionVista vista) {
+        this.vista = vista;
+    }
+
     @Override
     public void setPlayers(List<String> names) {
         for (String name: names){
@@ -125,7 +126,7 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
         }
     }
 
-
+    // GETTERS: Interroga modelo
     @Override
     public String getScoreBoard() {
         HighScore.readFile();
@@ -149,6 +150,7 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
         StringBuilder str = new StringBuilder();
         str.append("RESULTADO FINAL:\n");
         for (Player player: players){
+            // ORDENABLE, pero eso implica que se puede optimizar el método getScoreBoard
             str.append(" → " + player.getName() + ": " + player.getScore() + " puntos.\n");
         }
         return str.toString();
