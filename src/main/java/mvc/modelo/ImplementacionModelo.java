@@ -14,22 +14,12 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
     private InformaVista vista;
     public ImplementacionModelo(){
         turn = 0;
-        player = new Player(giveName());
         loadPanels();
-    }
-
-    private String giveName() {
-        //provisional
-        System.out.print("Dime tu nombre: ");
-        Scanner sc = new Scanner(System.in);
-        String nombre = sc.next();
-        sc.close();
-        return nombre;
     }
 
     private Iterator<Panel> it;
     private Set<Panel> panels = new HashSet<>();
-    private Player player;
+    private List<Player> players = new ArrayList<>();
     private Panel currentPanel = null;
     private int turn;
 
@@ -72,7 +62,7 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
     @Override
     public void nextPanel() {
         if (turn==10) {
-            vista.setFeedback("FIN DEL JUEGO.");
+            vista.setFeedbackGeneral("FIN DEL JUEGO.");
             vista.endGame();
         }
         else {
@@ -90,42 +80,60 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
                 System.out.println("No hay más viñetas.");
             } else {
                 vista.setNewPanel(currentPanel.getImage());
-                vista.setFeedback("");
+                vista.setFeedbackGeneral("");
+                for (int i = 0; i < getNumPlayers(); i++) {
+                    vista.setFeedback(i,"");
+                }
                 vista.setStatus("Comprobar");
             }
         }
     }
 
     @Override
-    public void showAnswer(int chapter) {
-        int guessedChapter = chapter;
+    public void showAnswers(List<Integer> chapters) {
         int actualChapter = currentPanel.getRightChapter();
-        if (guessedChapter == actualChapter){
-            player.addScore(-10);
-            vista.setFeedback("¡Exacto! Era ese capítulo.");
-        } else {
-            int difference = Math.abs(guessedChapter-actualChapter);
-            player.addScore(difference);
-            String feedback = "";
-            if (difference<10){
-                feedback = "¡Casi, casi! ";
-            } else if (difference>100){
-                feedback = "Creo que te has equivocado de arco. ";
+        for (int i=0; i<players.size(); i++) {
+            Player player = players.get(i);
+            int guessedChapter = chapters.get(i);
+            String string = "";
+            if (guessedChapter == actualChapter) {
+                player.addScore(-10);
+                string = "¡Exacto! Ni más ni menos.";
+
+            } else {
+                int difference = Math.abs(guessedChapter - actualChapter);
+                player.addScore(difference);
+                if (difference < 10) {
+                    string = "¡Casi, casi! Una pena";
+                } else if (difference > 100) {
+                    string = "Creo que te has equivocado de arco.";
+                } string += " Te has ido por " + difference + " capítulos.";
+
             }
-            vista.setFeedback(feedback + "La respuesta correcta era "+ actualChapter +
-                    ". Te has ido por "+ difference +" capítulos.");
+            vista.setFeedback(i, string);
+            vista.setScore(i, player.getScore());
         }
-        vista.setScore(player.getScore());
+        vista.setFeedbackGeneral("La respuesta correcta era " + actualChapter + ".");
         vista.setStatus("Siguiente");
         turn++;
+    }
+
+    @Override
+    public void setPlayers(List<String> names) {
+        for (String name: names){
+            players.add(new Player(name));
+        }
     }
 
 
     @Override
     public String getScoreBoard() {
         HighScore.readFile();
-        if (player.getScore() < HighScore.getMaxHighScore()){
-            HighScore.update(player);
+
+        for (Player player : players) {
+            if (player.getScore() < HighScore.getMaxHighScore()) {
+                HighScore.update(player);
+            }
         }
 
         StringBuilder str = new StringBuilder();
@@ -137,8 +145,22 @@ public class ImplementacionModelo implements CambioModelo, InterrogaModelo {
     }
 
     @Override
-    public int getScore() {
-        return player.getScore();
+    public String getFinalScore() {
+        StringBuilder str = new StringBuilder();
+        str.append("RESULTADO FINAL:\n");
+        for (Player player: players){
+            str.append(" → " + player.getName() + ": " + player.getScore() + " puntos.\n");
+        }
+        return str.toString();
     }
 
+    @Override
+    public String getPlayerName(int index) {
+        return players.get(index).getName();
+    }
+
+    @Override
+    public int getNumPlayers() {
+        return players.size();
+    }
 }

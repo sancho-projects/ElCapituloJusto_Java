@@ -2,5 +2,8 @@ package mvc.modelo;
 
 public interface InterrogaModelo {
     String getScoreBoard();
-    int getScore();
+    String getFinalScore();
+
+    String getPlayerName(int index);
+    int getNumPlayers();
 }

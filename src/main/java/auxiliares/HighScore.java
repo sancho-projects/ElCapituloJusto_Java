@@ -11,7 +11,7 @@ import java.util.List;
 
 public class HighScore {
     private static List<Player> highscores = new LinkedList<>();
-
+    private static final int CAPACITY = 5;
     public static void rewrite() {
         FileWriter file = null;
         PrintWriter pw;
@@ -60,17 +60,20 @@ public class HighScore {
     }
 
     public static void cut() {
-        for (int i = 5; i < HighScore.getSize(); i++) {
-            highscores.remove(i);
+        while (getSize() > 5){
+            highscores.remove(getSize()-1);
         }
     }
 
     public static int getMaxHighScore() {
-            if (highscores.size() < 5) return Integer.MAX_VALUE;
+            if (highscores.size() < CAPACITY) return Integer.MAX_VALUE;
             return highscores.get( highscores.size() -1 ).getScore();
         }
 
     public static void update(Player player) {
+        if (highscores.isEmpty()) {
+            highscores.add(player);
+        } else {
             for (int i = 0; i < highscores.size(); i++){
                 Player aspirant = highscores.get(i);
                 if (player.getScore() < aspirant.getScore()){
@@ -82,8 +85,7 @@ public class HighScore {
                 }
             }
             cut();
-            rewrite();
         }
-
-
+            rewrite();
+    }
 }

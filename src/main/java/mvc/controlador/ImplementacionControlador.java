@@ -5,6 +5,8 @@ import mvc.modelo.ImplementacionModelo;
 import mvc.vista.ImplementacionVista;
 import mvc.vista.InterrogaVista;
 
+import java.util.List;
+
 public class ImplementacionControlador implements Controlador{
     private InterrogaVista vista;
     private CambioModelo modelo;
@@ -19,12 +21,23 @@ public class ImplementacionControlador implements Controlador{
 
     @Override
     public void goPressed() {
-        String file = vista.getPanel();
         if (vista.getStatus().equals("Siguiente")){
             modelo.nextPanel();
         } else {
-            modelo.showAnswer(vista.getChapter());
+            modelo.showAnswers(vista.getChapters());
         }
 
     }
+
+    @Override
+    public void sendNames(List<String> names) {
+        for (int i=0; i<names.size(); i++) {
+            String name = names.get(i);
+            if (name.equals("") || name == null) {
+                names.set(i,"Jugador " + (i+1) );
+            }
+        }
+        modelo.setPlayers(names);
+    }
+
 }

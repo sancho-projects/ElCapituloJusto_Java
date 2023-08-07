@@ -1,9 +1,10 @@
 package mvc.vista;
 
+import java.util.List;
+
 public interface InterrogaVista {
 
-    String getPanel();
     String getStatus();
 
-    int getChapter();
+    List<Integer> getChapters();
 }
