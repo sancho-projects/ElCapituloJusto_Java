@@ -5,5 +5,7 @@ import java.util.List;
 public interface Controlador {
     void goPressed();
 
-    void sendNames(List<String> names);
+    void initializeGame(List<String> names);
+
+    void tryAgain();
 }

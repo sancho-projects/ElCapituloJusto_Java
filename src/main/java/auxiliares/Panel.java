@@ -2,10 +2,10 @@ package auxiliares;
 
 public class Panel {
     private String image;
-    private String difficulty;
+    private int difficulty;
     private int rightChapter;
 
-    public Panel(String image, int rightChapter, String difficulty){
+    public Panel(String image, int rightChapter, int difficulty){
         this.image = image;
         this.difficulty = difficulty;
         this.rightChapter = rightChapter;
@@ -15,7 +15,7 @@ public class Panel {
         return image;
     }
 
-    public String getDifficulty() {
+    public int getDifficulty() {
         return difficulty;
     }
 

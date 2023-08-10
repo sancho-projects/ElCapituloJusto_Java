@@ -6,13 +6,11 @@ import javafx.scene.Parent;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.util.converter.IntegerStringConverter;
 import mvc.controlador.Controlador;
 import mvc.controlador.ImplementacionControlador;
 import javafx.scene.Scene;
@@ -20,14 +18,23 @@ import javafx.stage.Stage;
 import mvc.modelo.ImplementacionModelo;
 import mvc.modelo.InterrogaModelo;
 
+import java.text.NumberFormat;
+import java.text.ParsePosition;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.UnaryOperator;
 
 public class ImplementacionVista implements InterrogaVista, InformaVista{
     private final Stage stage;
     private Controlador controlador;
     private InterrogaModelo modelo;
 
+    private CheckBox easy;
+    private CheckBox medium;
+    private CheckBox hard;
+    private Spinner<Integer> lastChapter;
     private ImageView iv;
     private Button skipButton;
     private List<Spinner<Integer>> chapters = new ArrayList<>();
@@ -43,58 +50,26 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         this.stage = stage;
     }
 
-
-    // SETTERS
-    public void setModelo(ImplementacionModelo modelo) {
-        this.modelo = modelo;
-    }
-    public void setControlador(ImplementacionControlador controlador) {
-        this.controlador = controlador;
-    }
-
-
-
-    @Override
-    public void setScore(int i, int newscore) {
-        scores.get(i).setText(Integer.toString(newscore));
-    }
-    @Override
-    public void setStatus(String status) {
-        skipButton.setText(status);
-    }
-    @Override
-    public void setNewPanel(String fileName) {
-        iv.setImage(new Image(fileName));
-    }
-    @Override
-    public void setFeedbackGeneral(String string) {
-        feedbackGeneral.setText(string);
-    }
-    @Override
-    public void setFeedback(int i, String s) {
-        feedbacks.get(i).setText(s);
-    }
-
-
-    // GETTERS
-    @Override
-    public String getStatus() {
-        return skipButton.getText();
-    }
-    @Override
-    public List<Integer> getChapters() {
-        List<Integer> list = new ArrayList<>();
-        for (Spinner<Integer> chapter : chapters) {
-             list.add(chapter.getValue());
-        }
-        return list;
-    }
-
-
     // GUI
+    public void creaMenuGUI() {
+        stage.setTitle("¡El capítulo justo!");
+        stage.getIcons().add(new Image("icon.png"));
+
+        Tab page1 = new Tab("Menú principal", startGUI());
+        Tab page2 = new Tab("Personalización", customGUI());
+        TabPane tabPane = new TabPane();
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
+        tabPane.getTabs().add(page1); 
+        tabPane.getTabs().add(page2);
+
+        Scene scene1 = new Scene(tabPane);
+        stage.setResizable(false);
+        stage.setScene(scene1);
+        stage.show();
+    }
     private void creaGameGUI() {
         Parent titleBox = titleGUI();
-        Parent dataBox = dataGUI();
+        Parent dataBox = userGUI();
         Parent buttonBox = buttonGUI();
         Parent panelBox = panelGUI();
         Parent feedbackBox = feedbackGUI();
@@ -109,29 +84,10 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
 
         Scene scene2 = new Scene(mainBox);
         stage.setResizable(true);
-        stage.setFullScreen(true);
         stage.setScene(scene2);
+        stage.setFullScreen(true);
         stage.show();
     }
-
-    public void creaMenuGUI() {
-        stage.setTitle("¡El capítulo justo!");
-
-        Parent startPane = startGUI();
-        Tab page1 = new Tab("Menú principal", startPane);
-        Parent customPane = customGUI();
-        Tab page2 = new Tab("Personalización", customPane);
-        TabPane tabPane = new TabPane();
-        tabPane.getTabs().add(page1);
-        tabPane.getTabs().add(page2);
-
-        Scene scene1 = new Scene(tabPane);
-        stage.setResizable(false);
-        stage.setScene(scene1);
-        stage.show();
-    }
-
-
 
     private Parent startGUI() {
         Text text = new Text("Escoge el número de jugadores:");
@@ -164,9 +120,9 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
             textFieldList.add(nameTF);
         }
 
-        updateNamesGUI((int) slider.getValue(), textList, textFieldList);
+        updateNames((int) slider.getValue(), textList, textFieldList);
         slider.setOnMouseReleased( e->
-                    updateNamesGUI((int) slider.getValue(), textList, textFieldList)
+                    updateNames((int) slider.getValue(), textList, textFieldList)
         );
 
         Button nextButton = new Button("Comenzar");
@@ -175,7 +131,7 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
             for (int i=0; i< slider.getValue(); i++) {
                 names.add(textFieldList.get(i).getText());
             }
-            controlador.sendNames(names);
+            controlador.initializeGame(names);
             creaGameGUI();
         });
 
@@ -192,31 +148,49 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         return startPane;
     }
 
-    private void updateNamesGUI(int value, List<Text> textList, List<TextField> textFieldList) {
-        boolean visible = true;
-        for (int i=0; i<5; i++){
-            if (i==value) visible = false;
-            textList.get(i).setVisible(visible);
-            textFieldList.get(i).setVisible(visible);
-        }
-    }
-
     private Parent customGUI() {
-        GridPane customPane = new GridPane();
-        Label label = new Label("Aquí vienen los ajustes");
-        Label label2 = new Label("Escoger franja de capítulos");
-        Label label3 = new Label("0 al 1089");
-        Label label4 = new Label("Escoger dificultad (easy, medium or hard)");
-        customPane.setMaxWidth(Double.MAX_VALUE);
-        customPane.add(label,0,0);
-        customPane.add(label2,0,1);
-        customPane.add(label3,1,1);
-        customPane.add(label4,0,2);
+        Label label = new Label("Aquí puedes personalizar las viñetas que te saldrán.");
 
-        return customPane;
+        Label limitLabel = new Label("Del capítulo 1 al :");
+        limitLabel.setFont(SUBTEXT_FONT);
+        lastChapter = new Spinner<>(100, 1089, 1);
+        lastChapter.setEditable(true);
+        lastChapter.getEditor().setTextFormatter(numberFormatter(1089));
+
+        Label difficultyLabel = new Label("Dificultad de las viñetas: ");
+        difficultyLabel.setFont(SUBTEXT_FONT);
+        easy = new CheckBox("Fácil");
+        easy.fire();
+        medium = new CheckBox("Medio");
+        medium.fire();
+        hard = new CheckBox("Difícil");
+        hard.fire();
+
+        AtomicInteger checkedButtons = new AtomicInteger(3);
+        easy.setOnAction(e-> checkedButtons.set(notDisableAll(easy, checkedButtons.get())));
+        medium.setOnAction(e-> checkedButtons.set(notDisableAll(medium, checkedButtons.get())));
+        hard.setOnAction(e-> checkedButtons.set(notDisableAll(hard, checkedButtons.get())));
+
+        HBox difficultyPane = new HBox(easy, medium, hard);
+        difficultyPane.setSpacing(20);
+
+        GridPane customPane = new GridPane();
+        customPane.setAlignment(Pos.TOP_CENTER);
+        customPane.setPadding(new Insets(10,10,10,10));
+        customPane.setVgap(20);
+
+        customPane.add(limitLabel,0,0);
+        customPane.add(lastChapter,1,0);
+        customPane.add(difficultyLabel,0,1);
+        customPane.add(difficultyPane,1,1);
+
+        VBox vbox = new VBox(label, customPane);
+        vbox.setAlignment(Pos.TOP_CENTER);
+        return vbox;
     }
+
     private Parent titleGUI() {
-        Label saludo = new Label("Intenta adivinar los capítulos.");
+        Label saludo = new Label("↓ Introduce aquí abajo el capítulo por el que apuestas ↓");
         saludo.setFont(TITLE_FONT);
 
         HBox title = new HBox(saludo);
@@ -226,27 +200,17 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         return title;
     }
 
-    private Parent panelGUI() {
-        Image panel = new Image("rules.jpg");
-        iv = new ImageView();
-        iv.setImage(panel);
-        iv.setFitHeight(500);
-        iv.setPreserveRatio(true);
-        iv.setSmooth(true);
-
-        StackPane stackPane = new StackPane(iv);
-        stackPane.setAlignment(Pos.CENTER);
-        return stackPane;
-    }
-
-    private Parent dataGUI() {
+    private Parent userGUI() {
         GridPane dataBox = new GridPane();
         for (int i=0; i< modelo.getNumPlayers(); i++) {
             Label nameLabel = new Label(modelo.getPlayerName(i));
             nameLabel.setFont(TEXT_FONT);
 
-            Spinner<Integer> chapterSpinner = new Spinner<>(0, 1089, 1);
+            Spinner<Integer> chapterSpinner = new Spinner<>(1, 1089, 1);
             chapterSpinner.setEditable(true);
+            chapterSpinner.setMinHeight(50);
+            chapterSpinner.setMaxWidth(75);
+            chapterSpinner.getEditor().setTextFormatter(numberFormatter(1));
             chapters.add(chapterSpinner);
 
             Label scoreLabel = new Label("0");
@@ -254,9 +218,9 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
             scoreLabel.setTextFill(Color.RED);
             scores.add(scoreLabel);
 
-            dataBox.add(nameLabel, i, 0);
-            dataBox.add(chapterSpinner, i, 1);
-            dataBox.add(scoreLabel, i, 2);
+            VBox vbox = new VBox(nameLabel, chapterSpinner, scoreLabel);
+            vbox.setAlignment(Pos.CENTER);
+            dataBox.add(vbox, i, 0);
 
             dataBox.setAlignment(Pos.CENTER);
             dataBox.setHgap(100);
@@ -275,18 +239,33 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         return buttonBox;
     }
 
+    private Parent panelGUI() {
+        Image panel = new Image("rules.png");
+        iv = new ImageView();
+        iv.setImage(panel);
+        iv.setFitHeight(400);
+        iv.setPreserveRatio(true);
+        iv.setSmooth(true);
+
+        StackPane stackPane = new StackPane(iv);
+        stackPane.setAlignment(Pos.CENTER);
+        return stackPane;
+    }
+
     private Parent feedbackGUI() {
         GridPane gridPane = new GridPane();
         gridPane.setPadding(new Insets(5,10,5,10));
         gridPane.setHgap(50);
         gridPane.setAlignment(Pos.CENTER);
-        feedbackGeneral.setFont(TEXT_FONT);
+        feedbackGeneral.setFont(TITLE_FONT);
+        feedbackGeneral.setStyle("-fx-font-weight: bold");
 
         for (int i=0; i< modelo.getNumPlayers(); i++){
             TextArea feedback = new TextArea();
             feedback.setMaxWidth( (float) 1920/modelo.getNumPlayers() - 100);
-            feedback.setMaxHeight(100);
+            feedback.setMaxHeight(60);
             feedback.setWrapText(true);
+            feedback.setEditable(false);
             feedback.setFont(SUBTEXT_FONT);
             feedbacks.add(feedback);
 
@@ -300,21 +279,198 @@ public class ImplementacionVista implements InterrogaVista, InformaVista{
         return vbox;
     }
 
+
+    // MODELO INFORMA a VISTA
     @Override
-    public void finalScoreGUI() {
+    public void finalScore() {
+        setFeedbackGeneral("FIN DEL JUEGO.");
+
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Puntuación final");
         alert.setHeaderText(modelo.getFinalScore());
 
-        alert.setContentText("Desplegar para ver los mejores puntajes.");
-        TextArea textArea = new TextArea(modelo.getScoreBoard());
-        textArea.setMaxWidth(250);
-        VBox vbox = new VBox(textArea);
-        alert.getDialogPane().setExpandableContent(vbox);
+        TabPane tabPane = new TabPane();
+        tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
+        Tab highscorePage = new Tab("Highscore", highscoreGUI());
+        tabPane.getTabs().add(highscorePage);
+
+        for (int i=0; i<modelo.getNumPlayers(); i++){
+            Tab playerPage = new Tab("Registro de " + modelo.getPlayerName(i), registerGUI(i));
+            tabPane.getTabs().add(playerPage);
+        }
+
+        alert.getDialogPane().setExpandableContent(tabPane);
+
+        ButtonType buttonTryAgain = new ButtonType("Volver a jugar");
+        ButtonType buttonClose = new ButtonType("Cerrar");
+        alert.getButtonTypes().setAll(buttonTryAgain,buttonClose);
+        Optional<ButtonType> option = alert.showAndWait();
+        if (option.get() == buttonTryAgain) {
+            controlador.tryAgain();
+        } else if (option.get() == buttonClose) {
+            stage.close();
+        }
+    }
+
+    private Parent registerGUI(int playerIndex) {
+        GridPane gridPane = new GridPane();
+        gridPane.setAlignment(Pos.CENTER);
+        gridPane.setVgap(10);
+
+        Label subtitle = new Label("Registro de todos los turnos de "+ modelo.getPlayerName(playerIndex));
+        subtitle.setFont(SUBTEXT_FONT);
+        gridPane.addRow(0, subtitle);
+        for (int i = 0; i<modelo.getTURNS(); i++){
+            gridPane.addRow(i+1, new Label(modelo.getRegisterAtTurn(playerIndex, i)));
+        }
+
+        Label minLabel = new Label(modelo.getMinRecord(playerIndex));
+        Label maxLabel = new Label(modelo.getMaxRecord(playerIndex));
+        minLabel.setFont(SUBTEXT_FONT);
+        maxLabel.setFont(SUBTEXT_FONT);
+        gridPane.addRow(modelo.getTURNS()+1, minLabel);
+        gridPane.addRow(modelo.getTURNS()+2, maxLabel);
+
+        return gridPane;
+    }
+
+    private Parent highscoreGUI() {
+        Label title = new Label("HIGH SCORE");
+        title.setFont(new Font("Impact", 30));
+        title.setStyle("-fx-font-weight: bold");
+        TextArea textArea = new TextArea(modelo.getHighScoreBoard());
+        textArea.setMaxWidth(250);
+        textArea.setEditable(false);
+        VBox vbox = new VBox(title, textArea);
+        vbox.setAlignment(Pos.CENTER);
+        return vbox;
+    }
+
+    @Override
+    public void outOfPanels() {
+        setFeedbackGeneral("No hay más viñetas.");
+
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Fin del juego.");
+        alert.setHeaderText("Parece que hemos llegado al límite.");
+        alert.setContentText("No disponemos de más viñetas que cumplan con los requisitos exigidos," +
+                "por lo que ponemos fin al juego. Vuelva a jugar con otras opciones o espere nuevas" +
+                " actualizaciones.");
         alert.showAndWait();
         stage.close();
     }
 
 
+    // SETTERS
+    public void setModelo(ImplementacionModelo modelo) {
+        this.modelo = modelo;
+    }
+    public void setControlador(ImplementacionControlador controlador) {
+        this.controlador = controlador;
+    }
+    @Override
+    public void setScore(int i, int newscore) {
+        scores.get(i).setText(Integer.toString(newscore));
+    }
+    @Override
+    public void setStatus(String status) {
+        skipButton.setText(status);
+    }
+    @Override
+    public void setNewPanel(String fileName) {
+        iv.setImage(new Image(fileName));
+    }
+    @Override
+    public void setFeedbackGeneral(String string) {
+        feedbackGeneral.setText(string);
+    }
+    @Override
+    public void setFeedback(int i, String s) {
+        feedbacks.get(i).setText(s);
+    }
+
+    // GETTERS
+    @Override
+    public String getStatus() {
+        return skipButton.getText();
+    }
+    @Override
+    public List<Integer> getChapters() {
+        List<Integer> list = new ArrayList<>();
+        for (Spinner<Integer> chapter : chapters) {
+            list.add(chapter.getValue());
+        }
+        return list;
+    }
+
+    @Override
+    public boolean getEasyStatus() {
+        return easy.isSelected();
+    }
+
+    @Override
+    public boolean getMediumStatus() {
+        return medium.isSelected();
+    }
+
+    @Override
+    public boolean getHardStatus() {
+        return hard.isSelected();
+    }
+
+    @Override
+    public int getLastChapter() {
+        return lastChapter.getValue();
+    }
+
+    // AUXILIAR
+    private void updateNames(int value, List<Text> textList, List<TextField> textFieldList) {
+        boolean visible = true;
+        for (int i=0; i<5; i++){
+            if (i==value) visible = false;
+            textList.get(i).setVisible(visible);
+            textFieldList.get(i).setVisible(visible);
+        }
+    }
+
+    private int notDisableAll(CheckBox button, int checkedButtons) {
+        {
+            if (checkedButtons == 1) {
+                if (!button.isSelected()){
+                    button.fire();
+                } else {
+                    checkedButtons++;
+                }
+            }
+            else {
+                if (!button.isSelected()) {
+                    checkedButtons--;
+                } else {
+                    checkedButtons++;
+                }
+            }
+        }
+        return checkedButtons;
+    }
+
+    // kleopatra, stackoverflow (2015)
+    private TextFormatter<?> numberFormatter(int startNumber) {
+        NumberFormat format = NumberFormat.getIntegerInstance();
+        UnaryOperator<TextFormatter.Change> filter = c -> {
+            if (c.isContentChange()) {
+                ParsePosition parsePosition = new ParsePosition(0);
+                // NumberFormat evaluates the beginning of the text
+                format.parse(c.getControlNewText(), parsePosition);
+                if (parsePosition.getIndex() == 0 ||
+                        parsePosition.getIndex() < c.getControlNewText().length()) {
+                    // reject parsing the complete text failed
+                    return null;
+                }
+            }
+            return c;
+        };
+        return new TextFormatter<>(
+                new IntegerStringConverter(), startNumber, filter);
+    }
 }

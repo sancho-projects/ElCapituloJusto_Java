@@ -29,7 +29,7 @@ public class ImplementacionControlador implements Controlador{
     }
 
     @Override
-    public void sendNames(List<String> names) {
+    public void initializeGame(List<String> names) {
         for (int i=0; i<names.size(); i++) {
             String name = names.get(i);
             if (name.equals("")) {
@@ -37,6 +37,18 @@ public class ImplementacionControlador implements Controlador{
             }
         }
         modelo.setPlayers(names);
+
+        modelo.setOptions(
+                vista.getEasyStatus(),
+                vista.getMediumStatus(),
+                vista.getHardStatus(),
+                vista.getLastChapter()
+        );
+    }
+
+    @Override
+    public void tryAgain() {
+        modelo.restart();
     }
 
 }

@@ -10,9 +10,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class HighScore {
-    private static List<Player> highscores = new LinkedList<>();
-    private static final int CAPACITY = 5;
-    public static void rewrite() {
+    private List<Player> highscores = new LinkedList<>();
+    private final int CAPACITY = 5;
+
+    public HighScore(){
+        readFile();
+    }
+    public void rewrite() {
         FileWriter file = null;
         PrintWriter pw;
         try {
@@ -35,7 +39,7 @@ public class HighScore {
         }
     }
 
-    public static void readFile() {
+    public void readFile() {
             CSVForPlayerFileReader csv = new CSVForPlayerFileReader();
             TableForPlayer table = (TableForPlayer) csv.readTableFromSource("src/main/resources/highScore.csv");
 
@@ -47,30 +51,26 @@ public class HighScore {
             }
     }
 
-    public static List<Player> getPlayers() {
+    public List<Player> getPlayers() {
         return highscores;
     }
 
-    public static int getSize() {
+    public int getSize() {
         return highscores.size();
     }
-    
-    public static void add(int i, Player player){
-        highscores.add(i,player);
-    }
 
-    public static void cut() {
+    public void cut() {
         while (getSize() > 5){
             highscores.remove(getSize()-1);
         }
     }
 
-    public static int getMaxHighScore() {
+    public int getMaxHighScore() {
             if (highscores.size() < CAPACITY) return Integer.MAX_VALUE;
             return highscores.get( highscores.size() -1 ).getScore();
         }
 
-    public static void update(Player player) {
+    public void update(Player player) {
         if (highscores.isEmpty()) {
             highscores.add(player);
         } else {
